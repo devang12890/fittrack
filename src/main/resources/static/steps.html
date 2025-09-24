@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Log Steps | FitTrack</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="page-container">
+    <h2>Log Your Steps</h2>
+
+    <form id="step-form">
+        <label for="steps">Steps Today</label>
+        <input type="number" id="steps" required placeholder="e.g. 5000">
+
+        <button type="submit">Save Steps</button>
+    </form>
+
+    <div class="history-box">
+        <h3>Step History</h3>
+        <div id="step-history"></div>
+    </div>
+
+    <div class="nav-links">
+        <div class="nav-btn" onclick="window.location.href='dashboard.html'">← Back to Dashboard</div>
+    </div>
+    <script>
+        document.getElementById("step-form").addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          const steps = parseInt(document.getElementById("steps").value);
+          if (isNaN(steps) || steps <= 0) {
+            alert("Please enter a valid step count.");
+            return;
+          }
+
+          let totalSteps = parseInt(localStorage.getItem("totalSteps")) || 0;
+          totalSteps += steps;
+          localStorage.setItem("totalSteps", totalSteps);
+
+          const logs = JSON.parse(localStorage.getItem("stepLogs")) || [];
+          logs.push({
+            steps,
+            date: new Date().toLocaleString()
+          });
+          localStorage.setItem("stepLogs", JSON.stringify(logs));
+
+          alert("Steps saved successfully!");
+          location.reload();
+        });
+
+        window.onload = function () {
+          const historyBox = document.getElementById("step-history");
+          const logs = JSON.parse(localStorage.getItem("stepLogs")) || [];
+
+          if (logs.length > 0) {
+            logs.slice().reverse().forEach((log, idx) => {
+              const div = document.createElement("div");
+              div.className = "history-entry";
+              div.innerHTML = `
+                <strong>${log.steps} steps</strong><br>
+                <small>${log.date}</small><br>
+                <button class="delete-btn" onclick="deleteStep(${logs.length - 1 - idx})">Delete</button>
+              `;
+              historyBox.appendChild(div);
+            });
+          } else {
+            historyBox.innerHTML = "<p>No step data yet.</p>";
+          }
+        };
+
+        function deleteStep(index) {
+          const logs = JSON.parse(localStorage.getItem("stepLogs")) || [];
+          const removed = logs.splice(index, 1)[0];
+          localStorage.setItem("stepLogs", JSON.stringify(logs));
+
+          let total = parseInt(localStorage.getItem("totalSteps")) || 0;
+          total -= removed.steps;
+          localStorage.setItem("totalSteps", total);
+
+          location.reload();
+        }
+    </script>
+</div>
+</body>
+</html>

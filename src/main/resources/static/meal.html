@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Log Meal | FitTrack</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="page-container">
+  <h2>Log Your Meal</h2>
+
+  <form id="meal-form">
+    <label for="meal">Meal Name</label>
+    <input type="text" id="meal" required placeholder="e.g. Oats, Paneer">
+
+    <label for="calories">Calories Consumed</label>
+    <input type="number" id="calories" required placeholder="e.g. 300">
+
+    <button type="submit">Save Meal</button>
+  </form>
+
+  <div class="history-box">
+    <h3>Meal History</h3>
+    <div id="meal-history"></div>
+  </div>
+
+  <div class="nav-links">
+    <div class="nav-btn" onclick="window.location.href='dashboard.html'">← Back to Dashboard</div>
+    <div class="nav-btn" onclick="window.location.href='workout.html'">← Log Workout</div>
+  </div>
+
+  <script>
+
+    document.getElementById("meal-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const meal = document.getElementById("meal").value.trim();
+      const calories = parseInt(document.getElementById("calories").value);
+
+      if (!meal || isNaN(calories)) {
+        alert("Please enter valid meal details.");
+        return;
+      }
+
+      // Update calories consumed in localStorage
+      let totalConsumed = parseInt(localStorage.getItem("caloriesConsumed")) || 0;
+      totalConsumed += calories;
+      localStorage.setItem("caloriesConsumed", totalConsumed);
+
+      // Save meal log in localStorage
+      const mealLogs = JSON.parse(localStorage.getItem("mealLogs")) || [];
+      mealLogs.push({
+        meal,
+        calories,
+        date: new Date().toLocaleString()
+      });
+      localStorage.setItem("mealLogs", JSON.stringify(mealLogs));
+
+      alert("Meal saved successfully!");
+      location.reload();
+    });
+
+    window.onload = function () {
+      const historyBox = document.getElementById("meal-history");
+      const mealLogs = JSON.parse(localStorage.getItem("mealLogs")) || [];
+
+      if (mealLogs.length > 0) {
+        mealLogs.slice().reverse().forEach((log, idx) => {
+          const div = document.createElement("div");
+          div.className = "history-entry";
+          div.innerHTML = `
+            <strong>${log.meal}</strong> - ${log.calories} kcal<br>
+            <small>${log.date}</small>
+            <br><button onclick="deleteMeal(${mealLogs.length - 1 - idx})" class="delete-btn">Delete</button>
+          `;
+          historyBox.appendChild(div);
+        });
+      } else {
+        historyBox.innerHTML = "<p>No meals yet.</p>";
+      }
+    };
+
+    function deleteMeal(index) {
+      let mealLogs = JSON.parse(localStorage.getItem("mealLogs")) || [];
+      const removed = mealLogs.splice(index, 1)[0];
+      localStorage.setItem("mealLogs", JSON.stringify(mealLogs));
+
+      // Adjust calorie count
+      let total = parseInt(localStorage.getItem("caloriesConsumed")) || 0;
+      total -= removed.calories;
+      localStorage.setItem("caloriesConsumed", total);
+
+      location.reload();
+    }
+  </script>
+</div>
+</body>
+</html>

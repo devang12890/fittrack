@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FitTrack</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="container">
+  <h2>Enter Your Info</h2>
+  <form id="user-form">
+    <input type="text" placeholder="Name" id="name" required />
+    <input type="email" placeholder="Email" id="email" required />
+    <input type="number" placeholder="Age" id="age" required />
+    <input type="number" placeholder="Height (cm)" id="height" required />
+    <input type="number" placeholder="Weight (kg)" id="weight" required />
+    <button type="submit" class="arrow-btn">→</button>
+  </form>
+</div>
+<script>
+  document.getElementById("user-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const name = document.getElementById("name").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const age = document.getElementById("age").value.trim();
+    const height = document.getElementById("height").value.trim();
+    const weight = document.getElementById("weight").value.trim();
+
+    const userData = {
+      name,
+      email,
+      age,
+      height,
+      weight
+    };
+
+    localStorage.setItem("userData", JSON.stringify(userData));
+    window.location.href = "dashboard.html";
+  });
+</script>
+</body>
+</html>

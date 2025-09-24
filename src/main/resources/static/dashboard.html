@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>FitTrack Dashboard</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="page-container">
+    <h1>Hello, <span id="username">User</span></h1>
+    <p>Ready to crush your fitness goals today?</p>
+
+    <div class="info-cards">
+        <div class="info-card">
+            <h3>Height</h3>
+            <div id="height-display" onclick="editField('height')">
+                <span id="height-value">--</span> cm
+            </div>
+            <input type="number" id="height-input" style="display: none;" />
+            <span id="height-saved" class="saved-msg">✓ Saved</span>
+        </div>
+
+        <div class="info-card">
+            <h3>Weight</h3>
+            <div id="weight-display" onclick="editField('weight')">
+                <span id="weight-value">--</span> kg
+            </div>
+            <input type="number" id="weight-input" style="display: none;" />
+            <span id="weight-saved" class="saved-msg">✓ Saved</span>
+        </div>
+    </div>
+
+    <h2>Log Activity</h2>
+    <div class="nav-links">
+        <div class="nav-btn" onclick="window.location.href='workout.html'">Log Workout</div>
+        <div class="nav-btn" onclick="window.location.href='meal.html'">Log Meal</div>
+        <div class="nav-btn" onclick="window.location.href='water.html'">Log Water</div>
+        <div class="nav-btn" onclick="window.location.href='steps.html'">Log Steps</div>
+        <div class="nav-btn" onclick="window.location.href='sleep.html'">Log Sleep</div>
+        <div class="nav-btn" onclick="window.location.href='summary.html'">Weekly Summary</div>
+    </div>
+
+    <div class="goal-section">
+        <h2>Select Your Goal</h2>
+        <select id="goal-select">
+            <option value="">-- Choose Goal --</option>
+            <option value="loss">Weight Loss</option>
+            <option value="maintain">Maintain Weight</option>
+            <option value="gain">Weight Gain</option>
+            <option value="muscle">Muscle Gain</option>
+        </select>
+    </div>
+
+    <div id="goal-output" class="macro-summary" style="display: none;">
+        <h3>Recommended Daily Intake</h3>
+        <p><strong>Calories:</strong> <span id="calories"></span> kcal</p>
+        <p><strong>Protein:</strong> <span id="protein"></span> g</p>
+        <p><strong>Carbs:</strong> <span id="carbs"></span> g</p>
+        <p><strong>Fats:</strong> <span id="fats"></span> g</p>
+    </div>
+
+    <div id="summary-section" class="macro-summary" style="display: none;">
+        <h3>Today's Summary</h3>
+        <p><strong>Calories Burned:</strong> <span id="calories-burned">0</span> kcal</p>
+        <p><strong>Calories Consumed:</strong> <span id="calories-consumed">0</span> kcal</p>
+        <p><strong>Total Steps:</strong> <span id="step-summary">0</span> steps</p>
+        <p><strong>Total Sleep:</strong> <span id="sleep-summary">0</span> hrs</p>
+
+    </div>
+</div>
+
+<script>
+    window.onload = function () {
+      let user = JSON.parse(localStorage.getItem('userData')) || {};
+
+      // If no user data, redirect
+      if (!user.name) {
+        alert("No user data found. Redirecting to home.");
+        window.location.href = "index.html";
+        return;
+      }
+
+      document.getElementById('username').textContent = user.name || "User";
+      document.getElementById('height-value').textContent = user.height || "--";
+      document.getElementById('weight-value').textContent = user.weight || "--";
+      document.getElementById('height-input').value = user.height || "";
+      document.getElementById('weight-input').value = user.weight || "";
+
+      // Summary values
+      document.getElementById('calories-burned').textContent = localStorage.getItem('caloriesBurned') || "0";
+      document.getElementById('calories-consumed').textContent = localStorage.getItem('caloriesConsumed') || "0";
+      document.getElementById('step-summary').textContent = localStorage.getItem('totalSteps') || "0";
+      document.getElementById('sleep-summary').textContent = localStorage.getItem('totalSleep') || "0";
+
+      // Show summary if any value exists
+      if (
+        localStorage.getItem('caloriesBurned') ||
+        localStorage.getItem('caloriesConsumed') ||
+        localStorage.getItem('totalSteps') ||
+        localStorage.getItem('totalSleep')
+      ) {
+        document.getElementById('summary-section').style.display = 'block';
+      }
+    };
+
+    function editField(field) {
+      let user = JSON.parse(localStorage.getItem('userData')) || {};
+      const display = document.getElementById(`${field}-display`);
+      const input = document.getElementById(`${field}-input`);
+      const valueSpan = document.getElementById(`${field}-value`);
+      const savedMsg = document.getElementById(`${field}-saved`);
+
+      display.style.display = 'none';
+      input.style.display = 'inline-block';
+      input.focus();
+
+      // Remove previous listeners to avoid duplicates
+      input.onchange = function () {
+        const newValue = input.value;
+        valueSpan.textContent = newValue;
+        display.style.display = 'block';
+        input.style.display = 'none';
+
+        user[field] = newValue;
+        localStorage.setItem('userData', JSON.stringify(user));
+
+        savedMsg.style.display = 'block';
+        setTimeout(() => savedMsg.style.display = 'none', 1500);
+      };
+    }
+
+    document.getElementById('goal-select').addEventListener('change', function () {
+      let user = JSON.parse(localStorage.getItem('userData')) || {};
+      const goal = this.value;
+      const weight = parseFloat(user.weight);
+
+      if (!goal || !weight) return;
+
+      const bmr = 22 * weight;
+      let calorie = bmr;
+      if (goal === 'loss') calorie = bmr - 500;
+      if (goal === 'gain') calorie = bmr + 300;
+      if (goal === 'muscle') calorie = bmr + 500;
+
+      const protein = (weight * 1.7).toFixed(1);
+      const fats = ((calorie * 0.25) / 9).toFixed(1);
+      const proteinCalories = protein * 4;
+      const fatCalories = fats * 9;
+      const carbs = ((calorie - proteinCalories - fatCalories) / 4).toFixed(1);
+
+      document.getElementById('goal-output').style.display = 'block';
+      document.getElementById('calories').textContent = Math.round(calorie);
+      document.getElementById('protein').textContent = protein;
+      document.getElementById('carbs').textContent = carbs;
+      document.getElementById('fats').textContent = fats;
+
+      user.goal = goal;
+      user.nutrition = {
+        calories: Math.round(calorie),
+        protein,
+        carbs,
+        fats
+      };
+      localStorage.setItem('userData', JSON.stringify(user));
+    });
+
+    // Theme toggle (if element exists)
+    const themeToggle = document.getElementById('theme-toggle');
+    if (themeToggle) {
+      themeToggle.addEventListener('change', function () {
+        document.body.classList.toggle('light-mode');
+      });
+    }
+</script>
+</body>
+</html>
+
+
